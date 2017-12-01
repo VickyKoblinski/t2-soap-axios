@@ -49,41 +49,45 @@ function getParkingData() {
   var facilityListOptions = options('GetFacilityList', facilityListSoapEnvelope);
   occupancyDataOptions = (lot) => options('GetOccupancyData', occupancySoapEnvelope(lot));
 
+  parseStringPromise = (data) =>
+    new Promise((resolve, reject) => {
+      parseString(data, (err, result) => {
+        if (err) reject(err);
+        else resolve(result)
+      });
+    })
+
+
 
   const p = new Promise(async (resolve, reject) => {
+    const parking = {};
+
     try {
-      axios(facilityListOptions)
-        .then(({ data }) => {
-          parseString(data, (err, result) => {
-            if (err) return reject(err);
-            result = result['soap:Envelope']['soap:Body'][0].GetFacilityListResponse[0].GetFacilityListResult[0];
-            parseString(result, (e, r) => {
-              if (e) return reject(e);
-              r = r.FacilityList.Facility;
-              const parking = {};
-              r.forEach(parkingSpot => {
-                const lot = parkingSpot.$;
-                parking[lot.UID] = { description: lot.Description };
-                axios(occupancyDataOptions(lot.UID)).then(({ data }) => {
-                  parseString(data, (e2, r2) => {
-                    r2 = r2['soap:Envelope']['soap:Body'][0].GetOccupancyDataResponse[0].GetOccupancyDataResult[0];
-                    parseString(r2, (e3, r3) => {
-                      r3 = r3.FacilityData.Facility[0].Occupancy[0];
-                      parking[lot.UID] = {
-                        ...parking[lot.UID],
-                        capacity: parseInt(r3.Capacity[0]),
-                        occupied: parseInt(r3.Occupied[0]),
-                        available: parseInt(r3.Available[0])
-                      };
-                      console.log(parking);
-                    })
-                  })
-                }).catch(error => console.log(error));
-              })
-            })
+      let data = (await axios(facilityListOptions)).data;
+      data = await parseStringPromise(data);
+      data = data['soap:Envelope']['soap:Body'][0].GetFacilityListResponse[0].GetFacilityListResult[0];
+      data = (await parseStringPromise(data)).FacilityList.Facility;
+
+      const fetchPromises = [];
+      data.forEach(lot => {
+        lot = lot.$;
+        parking[lot.UID] = { description: lot.Description };
+
+        axios(occupancyDataOptions(lot.UID))
+          .then(async ({ data }) => {
+            data = await parseStringPromise(data);
+            data = data['soap:Envelope']['soap:Body'][0].GetOccupancyDataResponse[0].GetOccupancyDataResult[0];
+            data = (await parseStringPromise(data)).FacilityData.Facility[0].Occupancy[0];
+            parking[lot.UID] = {
+              ...parking[lot.UID],
+              capacity: parseInt(data.Capacity[0]),
+              occupied: parseInt(data.Occupied[0]),
+              available: parseInt(data.Available[0])
+            };
+            console.log(parking);
           })
-        })
-        .catch(error => reject(error))
+
+      })
     }
     catch (e) {
       console.log(e);
