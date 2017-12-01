@@ -59,7 +59,7 @@ function getParkingData() {
 
 
 
-  const p = new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const parking = {};
 
     try {
@@ -68,33 +68,35 @@ function getParkingData() {
       data = data['soap:Envelope']['soap:Body'][0].GetFacilityListResponse[0].GetFacilityListResult[0];
       data = (await parseStringPromise(data)).FacilityList.Facility;
 
-      data.forEach(async (lot) => {
+      const requestPromises = [];
+      for (let lot of data) {
         try {
           lot = lot.$;
-          parking[lot.UID] = { description: lot.Description };
-
-          data = (await axios(occupancyDataOptions(lot.UID))).data;
-          data = await parseStringPromise(data);
-          data = data['soap:Envelope']['soap:Body'][0].GetOccupancyDataResponse[0].GetOccupancyDataResult[0];
-          data = (await parseStringPromise(data)).FacilityData.Facility[0].Occupancy[0];
-          parking[lot.UID] = {
-            ...parking[lot.UID],
-            capacity: parseInt(data.Capacity[0]),
-            occupied: parseInt(data.Occupied[0]),
-            available: parseInt(data.Available[0])
-          };
-          console.log(parking);
+          requestPromises.push(new Promise(async (resolve, reject) => {
+            data = (await axios(occupancyDataOptions(lot.UID))).data;
+            data = await parseStringPromise(data);
+            data = data['soap:Envelope']['soap:Body'][0].GetOccupancyDataResponse[0].GetOccupancyDataResult[0];
+            data = (await parseStringPromise(data)).FacilityData.Facility[0].Occupancy[0];
+            parking[lot.UID] = {
+              description: lot.Description,
+              capacity: parseInt(data.Capacity[0]),
+              occupied: parseInt(data.Occupied[0]),
+              available: parseInt(data.Available[0])
+            };
+            resolve();
+          }));
         } catch (e) {
-          console.log(e);
+          reject(e);
         }
-      });
-      // console.log(parking);
+      }
+      await Promise.all(requestPromises);
+      resolve(parking);
     }
     catch (e) {
-      console.log(e);
+      reject(e);
     }
   }
   );
 
 }
-getParkingData();
+getParkingData().then(p => console.log(p));
