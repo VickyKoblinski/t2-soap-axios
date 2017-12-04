@@ -1,5 +1,5 @@
 const axios = require('axios');
-const parseString = require('xml2js').parseString;
+const { parseString } = require('xml2js');
 const { facilityListOptions, occupancyDataOptions } = require('./lib/T2');
 
 function fetchOccupancyDataList() {
@@ -29,7 +29,7 @@ function fetchOccupancyDataList() {
       };
       resolve();
     } catch (e) {
-      reject(e);
+      reject(new Error(e));
     }
   });
 
@@ -41,18 +41,16 @@ function fetchOccupancyDataList() {
       facilityList = (await parseStringPromise(facilityList)).FacilityList.Facility;
 
       const requestPromises = [];
-      for (let facility of facilityList) {
-        requestPromises.push(fetchFacilityData(facility.$));
-      }
+      facilityList.forEach(facility =>
+        requestPromises.push(fetchFacilityData(facility.$))
+      );
       await Promise.all(requestPromises);
       resolve(parking);
     }
     catch (e) {
-      reject(e);
+      reject(new Error(e));
     }
-  }
-  );
-
+  })
 }
 
 module.exports = fetchOccupancyDataList;
