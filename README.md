@@ -7,7 +7,9 @@ A Nodejs module to request T2 Systems' SOAP service and return data as a Javascr
 
 ## Installation
 
-`npm install --save {name}`
+*Requires Node >=v9.0
+
+`npm install --save t2-soap-axios`
 
 Add to your `.env` file:
 ```
