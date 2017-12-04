@@ -54,4 +54,5 @@ function fetchOccupancyDataList() {
   );
 
 }
-fetchOccupancyDataList().then((p) => console.log(p));
+
+module.exports = fetchOccupancyDataList;
