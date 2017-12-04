@@ -1,8 +1,9 @@
 const axios = require('axios');
 const { parseString } = require('xml2js');
-const { facilityListOptions, occupancyDataOptions } = require('./lib/T2');
+const T2 = require('./lib/T2');
 
-function fetchOccupancyDataList() {
+function fetchOccupancyDataList(auth) {
+  const t2 = new T2(auth);
   const parking = {};
 
   parseStringPromise = (data) =>
@@ -17,7 +18,7 @@ function fetchOccupancyDataList() {
 
   fetchFacilityData = (facility) => new Promise(async (resolve, reject) => {
     try {
-      let occupancyData = (await axios(occupancyDataOptions(facility.UID))).data;
+      let occupancyData = (await axios(t2.occupancyDataOptions(facility.UID))).data;
       occupancyData = await parseStringPromise(occupancyData);
       occupancyData = soapBody('GetOccupancyData', occupancyData);
       occupancyData = (await parseStringPromise(occupancyData)).FacilityData.Facility[0].Occupancy[0];
@@ -35,7 +36,7 @@ function fetchOccupancyDataList() {
 
   return new Promise(async (resolve, reject) => {
     try {
-      let facilityList = (await axios(facilityListOptions)).data;
+      let facilityList = (await axios(t2.facilityListOptions())).data;
       facilityList = await parseStringPromise(facilityList);
       facilityList = soapBody('GetFacilityList', facilityList);
       facilityList = (await parseStringPromise(facilityList)).FacilityList.Facility;

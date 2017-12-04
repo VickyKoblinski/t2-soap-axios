@@ -11,19 +11,16 @@ A Nodejs module to request T2 Systems' SOAP service and return data as a Javascr
 
 `npm install --save t2-soap-axios`
 
-Add to your `.env` file:
-```
-USERNAME={T2 username}
-PASSWORD={T2 password}
-SUBDOMAIN={T2 subdomain}
-```
-
 ## Usage
 
 ```js
 import fetchOccupancyData from 't2-soap-axios';
 
-fetchOccupancyData().then(data => console.log(data));
+fetchOccupancyData({
+  username: String,
+  password: String,
+  subdomain: String
+}).then(data => console.log(data));
 ```
 
 Data format: 
