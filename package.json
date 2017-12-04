@@ -1,13 +1,18 @@
 {
   "name": "t2-soap-axios",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Nodejs module to request T2 Systems' SOAP service and return data as a Javascript object.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "SOAP",
+    "T2",
+    "Systems"
+  ],
+  "author": "Vicky Koblinski",
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.17.1",
     "dotenv": "^4.0.0",
